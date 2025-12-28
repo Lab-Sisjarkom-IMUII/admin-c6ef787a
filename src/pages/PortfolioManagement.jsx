@@ -8,6 +8,7 @@ import PortfolioDetailModal from '@/components/portfolio/PortfolioDetailModal';
 import { usePortfolios } from '@/hooks/usePortfolios';
 import Button from '@/components/ui/Button';
 
+
 export default function PortfolioManagement() {
   const { portfolios, loading, error, fetchPortfolios } = usePortfolios();
   const [search, setSearch] = useState('');
