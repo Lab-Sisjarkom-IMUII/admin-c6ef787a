@@ -1,0 +1,11 @@
+{
+  "name": "imuii-admin",
+  "framework": "nextjs",
+  "language": "javascript",
+  "buildCommand": "next build",
+  "startCommand": "next start",
+  "domain": "admin",
+  "email": "d.raihan2004@gmail.com",
+  "secretKey": "imuii_65fdb0cf19964cbe726889df6a8231542eb1a8b677adf00c9ef8b01dc19b6014",
+  "repoUrl": "https://github.com/Lab-Sisjarkom-IMUII/admin-c6ef787a.git"
+}

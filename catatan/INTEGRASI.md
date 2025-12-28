@@ -684,6 +684,101 @@ GET /api/v1/events/my-events
 - [ ] Implementasi CRUD operations untuk events
 - [ ] Implementasi project count calculation
 
+#### 7. Admin Management (Baru)
+
+**Status**: ⚠️ **PERLU DIBUAT DI BACKEND**
+
+Frontend `imuii-admin` sudah menyiapkan:
+- Halaman: `/dashboard/admins` (`AdminManagement.jsx`)
+- Hook: `useAdmins()` (`src/hooks/useAdmins.js`)
+- Komponen: `AdminTable`, `AdminFormModal`
+
+Semua ini mengasumsikan adanya endpoint manajemen admin berikut di `imuii-server`:
+
+##### 7.1 Get All Admins
+
+```
+GET /api/v1/admin/admins
+```
+
+**Authentication**: Required (Admin JWT Token)
+
+**Response (200 OK, rekomendasi format):**
+
+```json
+{
+  "success": true,
+  "message": "Admins retrieved successfully",
+  "data": {
+    "admins": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "username": "admin",
+        "email": "admin@imuii.id",
+        "role": "admin",
+        "last_login_at": "2024-01-15T10:00:00Z",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-15T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+##### 7.2 Create Admin
+
+```
+POST /api/v1/admin/admins
+```
+
+**Authentication**: Required (Admin JWT Token)
+
+**Request Body (rekomendasi, disesuaikan dengan tabel `admins` di docs auth):**
+
+```json
+{
+  "username": "new-admin",
+  "email": "new-admin@imuii.id",
+  "password": "secret123",
+  "role": "admin"
+}
+```
+
+**Response (200 OK, rekomendasi):**
+
+```json
+{
+  "success": true,
+  "message": "Admin created successfully",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "username": "new-admin",
+    "email": "new-admin@imuii.id",
+    "role": "admin",
+    "last_login_at": null,
+    "created_at": "2024-01-20T10:00:00Z",
+    "updated_at": "2024-01-20T10:00:00Z"
+  }
+}
+```
+
+##### 7.3 (Opsional) Update / Delete Admin
+
+Untuk future:
+
+- `PUT /api/v1/admin/admins/:id` — update admin (username, email, role, reset password)
+- `DELETE /api/v1/admin/admins/:id` — nonaktifkan/hapus admin
+
+### Catatan Integrasi Frontend
+
+- Hook `useAdmins` saat ini akan memanggil:
+  - `GET  /api/v1/admin/admins` untuk `fetchAdmins()`
+  - `POST /api/v1/admin/admins` untuk `createAdmin()`
+- Jika endpoint belum ada, hook akan:
+  - Menampilkan error di halaman `/dashboard/admins`
+  - Tidak crash, tapi memberi pesan: *\"kemungkinan endpoint manajemen admin belum diimplementasikan di backend\"*
+
+
 #### Event Registration (untuk imuii-portal)
 - [ ] Buat endpoint `POST /api/v1/events/:eventId/register` (user endpoint)
 - [ ] Buat endpoint `DELETE /api/v1/events/:eventId/projects/:projectId` (user endpoint)
