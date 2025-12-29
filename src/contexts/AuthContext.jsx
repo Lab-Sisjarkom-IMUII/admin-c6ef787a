@@ -64,6 +64,21 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+  
+  // Runtime check untuk memastikan kita berada di client-side
+  // Ini mencegah error saat build time ketika Next.js mencoba melakukan static analysis
+  if (typeof window === 'undefined') {
+    // Return default values saat SSR/build time
+    // Jangan throw error saat build time, return default values saja
+    return {
+      user: null,
+      loading: true,
+      login: async () => ({ success: false, error: 'Not available during SSR' }),
+      logout: () => {},
+      isAuthenticated: false,
+    };
+  }
+  
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
