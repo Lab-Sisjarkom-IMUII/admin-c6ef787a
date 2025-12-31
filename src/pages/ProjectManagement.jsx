@@ -5,17 +5,28 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProjectTable from '@/components/project/ProjectTable';
 import ProjectFilters from '@/components/project/ProjectFilters';
 import ProjectDetailModal from '@/components/project/ProjectDetailModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import AlertModal from '@/components/ui/AlertModal';
 import { useProjects } from '@/hooks/useProjects';
 import Button from '@/components/ui/Button';
 
 export default function ProjectManagement() {
-  const { projects, loading, error, fetchProjects } = useProjects();
+  const { projects, loading, error, fetchProjects, deployProject } = useProjects();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRedeployConfirmOpen, setIsRedeployConfirmOpen] = useState(false);
+  const [projectToRedeploy, setProjectToRedeploy] = useState(null);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info',
+  });
 
   useEffect(() => {
     fetchProjects();
@@ -55,6 +66,52 @@ export default function ProjectManagement() {
     fetchProjects(); // Refresh list
   };
 
+  // Handle re-deploy
+  const handleRedeploy = (project) => {
+    setProjectToRedeploy(project);
+    setIsRedeployConfirmOpen(true);
+  };
+
+  const handleConfirmRedeploy = async () => {
+    if (!projectToRedeploy) return;
+    
+    setIsDeploying(true);
+    try {
+      // Use default values for commit_sha and branch
+      // Server will handle "latest" or fetch from GitHub
+      const result = await deployProject(projectToRedeploy.id, "latest", "main");
+
+      if (!result.success) {
+        throw new Error(result.message || result.error || "Gagal trigger deployment");
+      }
+
+      // Close confirm modal
+      setIsRedeployConfirmOpen(false);
+      setProjectToRedeploy(null);
+
+      // Refresh project list to show updated status
+      await fetchProjects();
+
+      // Show success alert
+      setAlertModal({
+        isOpen: true,
+        title: "Berhasil",
+        message: `Deployment berhasil di-trigger untuk project "${projectToRedeploy.name}"! Status akan update secara otomatis.`,
+        variant: "success",
+      });
+    } catch (err) {
+      console.error("Error deploying project:", err);
+      setAlertModal({
+        isOpen: true,
+        title: "Error",
+        message: err.message || "Gagal trigger deployment",
+        variant: "error",
+      });
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -68,7 +125,7 @@ export default function ProjectManagement() {
               </h1>
             </div>
             <p className="text-[var(--foreground)]/60 text-lg ml-4">
-              View and delete projects. Editing is restricted to project owners.
+              View, redeploy, and delete projects. Admin can redeploy any project from any user.
             </p>
           </div>
           <div className="ml-4">
@@ -114,6 +171,8 @@ export default function ProjectManagement() {
           loading={loading}
           onView={handleView}
           onDelete={handleDelete}
+          onRedeploy={handleRedeploy}
+          isDeploying={isDeploying}
         />
 
         {/* Detail Modal */}
@@ -125,6 +184,37 @@ export default function ProjectManagement() {
             setSelectedProject(null);
           }}
           onDelete={handleDelete}
+        />
+
+        {/* Redeploy Confirm Modal */}
+        <ConfirmModal
+          isOpen={isRedeployConfirmOpen}
+          onClose={() => {
+            if (!isDeploying) {
+              setIsRedeployConfirmOpen(false);
+              setProjectToRedeploy(null);
+            }
+          }}
+          onConfirm={handleConfirmRedeploy}
+          title="Konfirmasi Redeploy"
+          message={
+            projectToRedeploy
+              ? `Apakah Anda yakin ingin melakukan redeploy untuk project "${projectToRedeploy.name}"? Deployment akan menggunakan commit terbaru dari branch main.`
+              : 'Apakah Anda yakin ingin melakukan redeploy?'
+          }
+          confirmText="Ya, Redeploy"
+          cancelText="Batal"
+          variant="info"
+          loading={isDeploying}
+        />
+
+        {/* Alert Modal */}
+        <AlertModal
+          isOpen={alertModal.isOpen}
+          onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+          title={alertModal.title}
+          message={alertModal.message}
+          variant={alertModal.variant}
         />
       </div>
     </DashboardLayout>
