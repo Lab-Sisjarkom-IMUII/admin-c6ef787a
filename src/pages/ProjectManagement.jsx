@@ -11,7 +11,7 @@ import { useProjects } from '@/hooks/useProjects';
 import Button from '@/components/ui/Button';
 
 export default function ProjectManagement() {
-  const { projects, loading, error, fetchProjects, deployProject } = useProjects();
+  const { projects, loading, error, pagination, fetchProjects, deployProject } = useProjects();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
@@ -27,10 +27,28 @@ export default function ProjectManagement() {
     message: '',
     variant: 'info',
   });
+  const hasActiveFilters = Boolean(
+    search ||
+    ownerFilter ||
+    statusFilter !== 'all' ||
+    sourceFilter !== 'all'
+  );
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    if (hasActiveFilters) {
+      fetchProjects(1, 100, { loadAll: true });
+    } else {
+      fetchProjects(1, 25);
+    }
+  }, [fetchProjects, hasActiveFilters]);
+
+  const refreshProjects = (pageOverride) => {
+    if (hasActiveFilters) {
+      return fetchProjects(1, 100, { loadAll: true });
+    }
+    return fetchProjects(pageOverride ?? pagination.page, pagination.limit);
+  };
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -63,7 +81,7 @@ export default function ProjectManagement() {
   const handleDelete = (project) => {
     // TODO: Implement delete functionality
     console.log('Delete project:', project);
-    fetchProjects(); // Refresh list
+    refreshProjects(); // Refresh list
   };
 
   // Handle re-deploy
@@ -90,7 +108,7 @@ export default function ProjectManagement() {
       setProjectToRedeploy(null);
 
       // Refresh project list to show updated status
-      await fetchProjects();
+      await refreshProjects();
 
       // Show success alert
       setAlertModal({
@@ -131,7 +149,7 @@ export default function ProjectManagement() {
           <div className="ml-4">
             <Button 
               variant="primary" 
-              onClick={fetchProjects} 
+              onClick={() => refreshProjects()} 
               disabled={loading}
               loading={loading}
               icon={
@@ -174,6 +192,35 @@ export default function ProjectManagement() {
           onRedeploy={handleRedeploy}
           isDeploying={isDeploying}
         />
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-[var(--foreground)]/60">
+          <span>
+            Menampilkan {filteredProjects.length} dari {pagination.total} project
+          </span>
+          {pagination.total > pagination.limit && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshProjects(pagination.page - 1)}
+                disabled={loading || pagination.page <= 1}
+              >
+                Prev
+              </Button>
+              <span>
+                Halaman {pagination.page} dari {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshProjects(pagination.page + 1)}
+                disabled={loading || pagination.page >= totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Detail Modal */}
         <ProjectDetailModal

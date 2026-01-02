@@ -28,6 +28,9 @@ export default function ProjectDetailModal({ project, isOpen, onClose, onDelete 
     }
   };
 
+  const liveUrl = project.deploy_url
+    || (project.domain ? (project.domain.startsWith('http') ? project.domain : `https://${project.domain}`) : null);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <Card glass className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -60,6 +63,17 @@ export default function ProjectDetailModal({ project, isOpen, onClose, onDelete 
               {project.repo_url ? (
                 <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">
                   {project.repo_url}
+                </a>
+              ) : '--'}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-[var(--foreground)]/60">Live URL</label>
+            <p className="text-[var(--foreground)]">
+              {liveUrl ? (
+                <a href={liveUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">
+                  {liveUrl}
                 </a>
               ) : '--'}
             </p>

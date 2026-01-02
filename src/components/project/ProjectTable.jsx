@@ -32,6 +32,20 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
     }
   };
 
+  const getLiveUrl = (project) => {
+    if (!project) return null;
+    if (project.deploy_url) return project.deploy_url;
+    if (project.domain) {
+      return project.domain.startsWith('http') ? project.domain : `https://${project.domain}`;
+    }
+    return null;
+  };
+
+  const handleOpenLive = (url) => {
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   if (loading) {
     return (
       <Card glass>
@@ -70,12 +84,14 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
             </tr>
           </thead>
           <tbody>
-            {projects.map((project, index) => (
-              <tr
-                key={project.id || index}
-                onClick={() => onRowClick && onRowClick(project)}
-                className="border-b border-[var(--border)]/50 hover:bg-gradient-to-r hover:from-[var(--primary)]/5 hover:to-transparent cursor-pointer transition-all duration-200 group"
-              >
+            {projects.map((project, index) => {
+              const liveUrl = getLiveUrl(project);
+              return (
+                <tr
+                  key={project.id || index}
+                  onClick={() => onRowClick && onRowClick(project)}
+                  className="border-b border-[var(--border)]/50 hover:bg-gradient-to-r hover:from-[var(--primary)]/5 hover:to-transparent cursor-pointer transition-all duration-200 group"
+                >
                 <td className="py-4 px-6 text-sm font-medium text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
                   {project.name || '--'}
                 </td>
@@ -112,6 +128,21 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleOpenLive(liveUrl)}
+                      disabled={!liveUrl}
+                      className="text-[var(--primary)] hover:text-[var(--primary)]/80 hover:bg-[var(--primary)]/10"
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10v11a1 1 0 001 1h11" />
+                        </svg>
+                      }
+                    >
+                      Live
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onRedeploy && onRedeploy(project)}
                       disabled={isDeploying}
                       className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
@@ -144,8 +175,9 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
                     </Button>
                   </div>
                 </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

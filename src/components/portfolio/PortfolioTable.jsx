@@ -30,6 +30,20 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
     }
   };
 
+  const getLiveUrl = (portfolio) => {
+    if (!portfolio) return null;
+    if (portfolio.deploy_url) return portfolio.deploy_url;
+    if (portfolio.status === 'deployed' && portfolio.domain_name) {
+      return `https://${portfolio.domain_name}.imuii.id`;
+    }
+    return null;
+  };
+
+  const handleOpenLive = (url) => {
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   if (loading) {
     return (
       <Card glass>
@@ -69,7 +83,9 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
             </tr>
           </thead>
           <tbody>
-            {portfolios.map((portfolio, index) => (
+            {portfolios.map((portfolio, index) => {
+              const liveUrl = getLiveUrl(portfolio);
+              return (
               <tr
                 key={portfolio.id || index}
                 onClick={() => onRowClick && onRowClick(portfolio)}
@@ -80,14 +96,14 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
                 </td>
                 <td className="py-4 px-6 text-sm text-[var(--foreground)]/80">{portfolio.domain_name || '--'}</td>
                 <td className="py-4 px-6 text-sm">
-                  {portfolio.deploy_url ? (
+                  {liveUrl ? (
                     <a
-                      href={portfolio.deploy_url}
+                      href={liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[var(--accent)] hover:text-[var(--accent)]/80 hover:underline transition-colors"
                     >
-                      {portfolio.deploy_url}
+                      {liveUrl}
                     </a>
                   ) : '--'}
                 </td>
@@ -121,6 +137,21 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleOpenLive(liveUrl)}
+                      disabled={!liveUrl}
+                      className="text-[var(--accent)] hover:text-[var(--accent)]/80 hover:bg-[var(--accent)]/10"
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10v11a1 1 0 001 1h11" />
+                        </svg>
+                      }
+                    >
+                      Live
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onDelete && onDelete(portfolio)}
                       className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                       icon={
@@ -134,7 +165,8 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
                   </div>
                 </td>
             </tr>
-          ))}
+              );
+            })}
         </tbody>
       </table>
       </div>

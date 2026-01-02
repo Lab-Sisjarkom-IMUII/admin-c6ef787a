@@ -7,19 +7,66 @@ export function useProjects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 25,
+  });
 
-  const fetchProjects = useCallback(async () => {
+  const fetchProjects = useCallback(async (page = 1, limit = 25, options = {}) => {
+    const { loadAll = false } = options;
     setLoading(true);
     setError(null);
     try {
-      const response = await apiRequest('/admin/projects/all');
-      // apiRequest() sudah normalize response via extractApiResponse()
-      // API sebenarnya: response = { success: true, projects: [...], total: ..., page: ..., limit: ... }
-      // Mock data: response = { success: true, projects: [...], total: ..., page: ..., limit: ... }
-      setProjects(response.projects || response.data?.projects || []);
+      const fetchPage = async (pageNumber, pageLimit) => {
+        const response = await apiRequest(`/admin/projects/all?page=${pageNumber}&limit=${pageLimit}`);
+        const list = response.projects || response.data?.projects || [];
+        return {
+          list: Array.isArray(list) ? list : [],
+          total: response.total ?? (Array.isArray(list) ? list.length : 0),
+          page: response.page || pageNumber,
+          limit: response.limit || pageLimit,
+        };
+      };
+
+      if (!loadAll) {
+        // apiRequest() sudah normalize response via extractApiResponse()
+        // API sebenarnya: response = { success: true, projects: [...], total: ..., page: ..., limit: ... }
+        // Mock data: response = { success: true, projects: [...], total: ..., page: ..., limit: ... }
+        const pageData = await fetchPage(page, limit);
+        setProjects(pageData.list);
+        setPagination({
+          total: pageData.total,
+          page: pageData.page,
+          limit: pageData.limit,
+        });
+        return;
+      }
+
+      const pageLimit = Math.min(limit, 100);
+      const firstPage = await fetchPage(1, pageLimit);
+      const totalItems = firstPage.total;
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageLimit));
+      const allProjects = [...firstPage.list];
+
+      for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
+        const pageData = await fetchPage(currentPage, pageLimit);
+        allProjects.push(...pageData.list);
+      }
+
+      setProjects(allProjects);
+      setPagination({
+        total: totalItems,
+        page: 1,
+        limit: totalItems > 0 ? totalItems : pageLimit,
+      });
     } catch (err) {
       setError(err.message);
       setProjects([]);
+      setPagination((prev) => ({
+        ...prev,
+        total: 0,
+      }));
     } finally {
       setLoading(false);
     }
@@ -59,6 +106,7 @@ export function useProjects() {
     projects,
     loading,
     error,
+    pagination,
     fetchProjects,
     deployProject,
   };

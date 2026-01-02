@@ -10,17 +10,35 @@ import Button from '@/components/ui/Button';
 
 
 export default function PortfolioManagement() {
-  const { portfolios, loading, error, fetchPortfolios } = usePortfolios();
+  const { portfolios, loading, error, pagination, fetchPortfolios } = usePortfolios();
   const [search, setSearch] = useState('');
   const [domainSearch, setDomainSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('');
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const hasActiveFilters = Boolean(
+    search ||
+    domainSearch ||
+    ownerFilter ||
+    statusFilter !== 'all'
+  );
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   useEffect(() => {
-    fetchPortfolios();
-  }, [fetchPortfolios]);
+    if (hasActiveFilters) {
+      fetchPortfolios(1, 100, { loadAll: true });
+    } else {
+      fetchPortfolios(1, 25);
+    }
+  }, [fetchPortfolios, hasActiveFilters]);
+
+  const refreshPortfolios = (pageOverride) => {
+    if (hasActiveFilters) {
+      return fetchPortfolios(1, 100, { loadAll: true });
+    }
+    return fetchPortfolios(pageOverride ?? pagination.page, pagination.limit);
+  };
 
   const filteredPortfolios = useMemo(() => {
     return portfolios.filter((portfolio) => {
@@ -55,7 +73,7 @@ export default function PortfolioManagement() {
   const handleDelete = (portfolio) => {
     // TODO: Implement delete functionality
     console.log('Delete portfolio:', portfolio);
-    fetchPortfolios(); // Refresh list
+    refreshPortfolios(); // Refresh list
   };
 
   return (
@@ -77,7 +95,7 @@ export default function PortfolioManagement() {
           <div className="ml-4">
             <Button 
               variant="primary" 
-              onClick={fetchPortfolios} 
+              onClick={() => refreshPortfolios()} 
               disabled={loading}
               loading={loading}
               icon={
@@ -118,6 +136,35 @@ export default function PortfolioManagement() {
           onView={handleView}
           onDelete={handleDelete}
         />
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-[var(--foreground)]/60">
+          <span>
+            Menampilkan {filteredPortfolios.length} dari {pagination.total} portfolio
+          </span>
+          {pagination.total > pagination.limit && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshPortfolios(pagination.page - 1)}
+                disabled={loading || pagination.page <= 1}
+              >
+                Prev
+              </Button>
+              <span>
+                Halaman {pagination.page} dari {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshPortfolios(pagination.page + 1)}
+                disabled={loading || pagination.page >= totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Detail Modal */}
         <PortfolioDetailModal

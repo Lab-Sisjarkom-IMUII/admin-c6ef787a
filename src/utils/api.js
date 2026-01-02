@@ -115,19 +115,38 @@ const mockApiHandlers = {
     return { data: mockMonitoringData };
   },
   
-  '/admin/subdomains/active': async () => {
+  '/admin/subdomains/active': async (options, endpoint) => {
     await simulateDelay();
+    const [path, queryString] = endpoint.split('?');
+    const params = new URLSearchParams(queryString || '');
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '25', 10);
+    const start = (page - 1) * limit;
+    const end = start + limit;
     return { 
       success: true,
-      subdomains: mockSubdomains 
+      subdomains: mockSubdomains.slice(start, end),
+      total: mockSubdomains.length,
+      page,
+      limit
     };
   },
   
-  '/admin/subdomains/all': async () => {
+  '/admin/subdomains/all': async (options, endpoint) => {
     await simulateDelay();
+    const [path, queryString] = endpoint.split('?');
+    const params = new URLSearchParams(queryString || '');
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '25', 10);
+    const all = getAllSubdomains();
+    const start = (page - 1) * limit;
+    const end = start + limit;
     return { 
       success: true,
-      subdomains: getAllSubdomains() 
+      subdomains: all.slice(start, end),
+      total: all.length,
+      page,
+      limit
     };
   },
   
@@ -177,25 +196,37 @@ const mockApiHandlers = {
     }
   },
   
-  '/admin/projects/all': async () => {
+  '/admin/projects/all': async (options, endpoint) => {
     await simulateDelay();
+    const [path, queryString] = endpoint.split('?');
+    const params = new URLSearchParams(queryString || '');
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '25', 10);
+    const start = (page - 1) * limit;
+    const end = start + limit;
     return { 
       success: true,
-      projects: mockProjects,
+      projects: mockProjects.slice(start, end),
       total: mockProjects.length,
-      page: 1,
-      limit: 25
+      page,
+      limit
     };
   },
   
-  '/admin/portfolios/all': async () => {
+  '/admin/portfolios/all': async (options, endpoint) => {
     await simulateDelay();
+    const [path, queryString] = endpoint.split('?');
+    const params = new URLSearchParams(queryString || '');
+    const page = parseInt(params.get('page') || '1', 10);
+    const limit = parseInt(params.get('limit') || '25', 10);
+    const start = (page - 1) * limit;
+    const end = start + limit;
     return { 
       success: true,
-      portfolios: mockPortfolios,
+      portfolios: mockPortfolios.slice(start, end),
       total: mockPortfolios.length,
-      page: 1,
-      limit: 25
+      page,
+      limit
     };
   },
   
@@ -403,18 +434,19 @@ function extractApiResponse(response) {
 export async function apiRequest(endpoint, options = {}) {
   // Use mock data if enabled
   if (USE_MOCK_DATA) {
+    const [endpointPath] = endpoint.split('?');
     // Check for dynamic routes
     for (const [pattern, handler] of Object.entries(mockApiHandlers)) {
       if (pattern.includes(':id')) {
         const regex = new RegExp('^' + pattern.replace(':id', '([^/]+)') + '$');
-        if (regex.test(endpoint)) {
+        if (regex.test(endpointPath)) {
           try {
             return await handler(options, endpoint);
           } catch (error) {
             throw error;
           }
         }
-      } else if (endpoint === pattern) {
+      } else if (endpointPath === pattern) {
         try {
           return await handler(options, endpoint);
         } catch (error) {

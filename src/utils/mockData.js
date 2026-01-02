@@ -150,6 +150,8 @@ export const mockProjects = [
     name: 'my-project',
     description: 'A full-stack web application built with React and Node.js',
     repo_url: 'https://github.com/user/my-project',
+    domain: 'my-project.imuii.id',
+    deploy_url: 'https://my-project.imuii.id',
     status: 'deployed',
     source: 'cli',
     owner: {

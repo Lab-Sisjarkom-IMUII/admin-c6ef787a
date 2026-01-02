@@ -11,7 +11,7 @@ import { useSubdomains } from '@/hooks/useSubdomains';
 import Button from '@/components/ui/Button';
 
 export default function SubdomainManagement() {
-  const { subdomains, loading, error, fetchSubdomains, reserveSubdomain, releaseSubdomain } = useSubdomains();
+  const { subdomains, loading, error, pagination, fetchSubdomains, reserveSubdomain, releaseSubdomain } = useSubdomains();
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -19,10 +19,27 @@ export default function SubdomainManagement() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, subdomain: null });
   const [alertModal, setAlertModal] = useState({ isOpen: false, message: '', variant: 'error' });
   const [releasing, setReleasing] = useState(false);
+  const hasActiveFilters = Boolean(
+    search ||
+    sourceFilter !== 'all' ||
+    statusFilter !== 'all'
+  );
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   useEffect(() => {
-    fetchSubdomains();
-  }, [fetchSubdomains]);
+    if (hasActiveFilters) {
+      fetchSubdomains(1, 100, { loadAll: true });
+    } else {
+      fetchSubdomains(1, 25);
+    }
+  }, [fetchSubdomains, hasActiveFilters]);
+
+  const refreshSubdomains = (pageOverride) => {
+    if (hasActiveFilters) {
+      return fetchSubdomains(1, 100, { loadAll: true });
+    }
+    return fetchSubdomains(pageOverride ?? pagination.page, pagination.limit);
+  };
 
   const filteredSubdomains = useMemo(() => {
     return subdomains.filter((subdomain) => {
@@ -51,7 +68,7 @@ export default function SubdomainManagement() {
   };
 
   const handleReserve = async (subdomain) => {
-    const result = await reserveSubdomain(subdomain);
+    const result = await reserveSubdomain(subdomain, { loadAll: hasActiveFilters });
     if (result.success) {
       setIsReserveModalOpen(false);
     } else {
@@ -83,7 +100,7 @@ export default function SubdomainManagement() {
       return;
     }
 
-    const result = await releaseSubdomain(subdomainId);
+    const result = await releaseSubdomain(subdomainId, { loadAll: hasActiveFilters });
     setReleasing(false);
 
     if (!result.success) {
@@ -131,7 +148,7 @@ export default function SubdomainManagement() {
             </Button>
             <Button 
               variant="primary" 
-              onClick={fetchSubdomains} 
+              onClick={() => refreshSubdomains()} 
               disabled={loading}
               loading={loading}
               icon={
@@ -170,6 +187,35 @@ export default function SubdomainManagement() {
           onRowClick={handleRowClick}
           onDelete={handleReleaseClick}
         />
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-[var(--foreground)]/60">
+          <span>
+            Menampilkan {filteredSubdomains.length} dari {pagination.total} subdomain
+          </span>
+          {pagination.total > pagination.limit && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshSubdomains(pagination.page - 1)}
+                disabled={loading || pagination.page <= 1}
+              >
+                Prev
+              </Button>
+              <span>
+                Halaman {pagination.page} dari {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshSubdomains(pagination.page + 1)}
+                disabled={loading || pagination.page >= totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Reserve Subdomain Modal */}
         <ReserveSubdomainModal
