@@ -18,6 +18,12 @@ const MonitoringIcon = ({ className }) => (
   </svg>
 );
 
+const TerminalIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
+  </svg>
+);
+
 const SubdomainIcon = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -84,6 +90,12 @@ const menuSections = [
         path: '/dashboard/monitoring', 
         icon: MonitoringIcon,
         shortName: 'Monitoring'
+      },
+      { 
+        name: 'Logs Terminal Server', 
+        path: '/dashboard/server-logs', 
+        icon: TerminalIcon,
+        shortName: 'Logs'
       },
     ],
   },
