@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+button {
+  cursor: pointer;
+}
+
 /* Dark Mode (Default) */
 :root {
   --background: #0B0B0E;

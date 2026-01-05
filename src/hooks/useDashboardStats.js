@@ -8,6 +8,44 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchAllPages = useCallback(async (endpoint, listKey, limit = 100) => {
+    const buildUrl = (pageNumber, pageLimit) => {
+      const separator = endpoint.includes('?') ? '&' : '?';
+      return `${endpoint}${separator}page=${pageNumber}&limit=${pageLimit}`;
+    };
+
+    const firstResponse = await apiRequest(buildUrl(1, limit));
+    const firstList = firstResponse?.[listKey] || firstResponse?.data?.[listKey] || [];
+    const list = Array.isArray(firstList) ? firstList : [];
+    const total = typeof firstResponse?.total === 'number' ? firstResponse.total : list.length;
+    const resolvedLimit = typeof firstResponse?.limit === 'number' ? firstResponse.limit : limit;
+
+    if (total <= list.length || resolvedLimit <= 0) {
+      return list;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / resolvedLimit));
+    const pages = [];
+    for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
+      pages.push(apiRequest(buildUrl(currentPage, resolvedLimit)));
+    }
+
+    if (pages.length === 0) {
+      return list;
+    }
+
+    const responses = await Promise.all(pages);
+    const combined = [...list];
+    responses.forEach((response) => {
+      const pageList = response?.[listKey] || response?.data?.[listKey] || [];
+      if (Array.isArray(pageList)) {
+        combined.push(...pageList);
+      }
+    });
+
+    return combined;
+  }, []);
+
   const calculateStats = useCallback((projects, portfolios, events, subdomains, monitoring) => {
     // Calculate stats from real API data
 
@@ -81,19 +119,19 @@ export function useDashboardStats() {
     try {
       // Fetch semua data dari API sebenarnya
       const [projectsRes, portfoliosRes, eventsRes, subdomainsRes, monitoringRes, servicesRes] = await Promise.allSettled([
-        apiRequest('/admin/projects/all'),
-        apiRequest('/admin/portfolios/all'),
-        apiRequest('/admin/events/all'),
-        apiRequest('/admin/subdomains/active'),
+        fetchAllPages('/admin/projects/all', 'projects'),
+        fetchAllPages('/admin/portfolios/all', 'portfolios'),
+        fetchAllPages('/admin/events/all', 'events'),
+        fetchAllPages('/admin/subdomains/active', 'subdomains'),
         apiRequest('/admin/monitoring/resources'),
         apiRequest('/admin/monitoring/services'),
       ]);
 
       // Extract data dari response
-      const projects = projectsRes.status === 'fulfilled' ? (projectsRes.value.projects || []) : [];
-      const portfolios = portfoliosRes.status === 'fulfilled' ? (portfoliosRes.value.portfolios || []) : [];
-      const events = eventsRes.status === 'fulfilled' ? (eventsRes.value.events || []) : [];
-      const subdomains = subdomainsRes.status === 'fulfilled' ? (subdomainsRes.value.subdomains || []) : [];
+      const projects = projectsRes.status === 'fulfilled' ? projectsRes.value : [];
+      const portfolios = portfoliosRes.status === 'fulfilled' ? portfoliosRes.value : [];
+      const events = eventsRes.status === 'fulfilled' ? eventsRes.value : [];
+      const subdomains = subdomainsRes.status === 'fulfilled' ? subdomainsRes.value : [];
       
       // Monitoring data
       const monitoring = {
@@ -130,7 +168,7 @@ export function useDashboardStats() {
     } finally {
       setLoading(false);
     }
-  }, [calculateStats]);
+  }, [calculateStats, fetchAllPages]);
 
   useEffect(() => {
     fetchStats();
