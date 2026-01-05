@@ -59,6 +59,17 @@ const AdminIcon = ({ className }) => (
   </svg>
 );
 
+const InviteIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M18 9v6m3-3h-6m-7 7a4 4 0 01-4-4V9a4 4 0 014-4h4m0 0a3 3 0 006 0m-6 0a3 3 0 016 0"
+    />
+  </svg>
+);
+
 const UploaderIcon = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -137,6 +148,12 @@ const menuSections = [
         path: '/dashboard/admins', 
         icon: AdminIcon,
         shortName: 'Admins'
+      },
+      { 
+        name: 'Invite GitHub User', 
+        path: '/dashboard/invite-github-user', 
+        icon: InviteIcon,
+        shortName: 'Invite'
       },
       { 
         name: 'Template Uploaders', 
