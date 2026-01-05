@@ -13,10 +13,15 @@ export default function Button({
   loading = false,
   icon,
   iconPosition = 'left',
+  href,
+  target,
+  rel,
   ...props
 }) {
   const [ripples, setRipples] = useState([]);
   const buttonRef = useRef(null);
+  const isLink = typeof href === 'string' && href.length > 0;
+  const Element = isLink ? 'a' : 'button';
   
   const baseStyles = 'relative inline-flex items-center justify-center rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--background)] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden';
   
@@ -36,7 +41,10 @@ export default function Button({
   };
   
   const handleClick = (e) => {
-    if (disabled || loading) return;
+    if (disabled || loading) {
+      if (isLink) e.preventDefault();
+      return;
+    }
     
     // Ripple effect
     const button = buttonRef.current;
@@ -66,12 +74,18 @@ export default function Button({
   );
   
   return (
-    <button
+    <Element
       ref={buttonRef}
-      type={type}
+      type={isLink ? undefined : type}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || loading}
+      disabled={!isLink && (disabled || loading)}
       onClick={handleClick}
+      href={isLink ? href : undefined}
+      target={isLink ? target : undefined}
+      rel={isLink ? rel : undefined}
+      role={isLink ? 'button' : undefined}
+      aria-disabled={isLink ? (disabled || loading) : undefined}
+      tabIndex={isLink && (disabled || loading) ? -1 : undefined}
       {...props}
     >
       {/* Ripple effects */}
@@ -121,6 +135,6 @@ export default function Button({
         {children}
         {iconPosition === 'right' && iconElement}
       </span>
-    </button>
+    </Element>
   );
 }

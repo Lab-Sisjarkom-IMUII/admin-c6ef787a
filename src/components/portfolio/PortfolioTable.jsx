@@ -39,11 +39,6 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
     return null;
   };
 
-  const handleOpenLive = (url) => {
-    if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   if (loading) {
     return (
       <Card glass>
@@ -137,7 +132,9 @@ export default function PortfolioTable({ portfolios, loading, onRowClick, onView
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleOpenLive(liveUrl)}
+                      href={liveUrl || undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       disabled={!liveUrl}
                       className="text-[var(--accent)] hover:text-[var(--accent)]/80 hover:bg-[var(--accent)]/10"
                       icon={

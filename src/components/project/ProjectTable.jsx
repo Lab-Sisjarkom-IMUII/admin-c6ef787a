@@ -41,11 +41,6 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
     return null;
   };
 
-  const handleOpenLive = (url) => {
-    if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   if (loading) {
     return (
       <Card glass>
@@ -128,7 +123,9 @@ export default function ProjectTable({ projects, loading, onRowClick, onView, on
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleOpenLive(liveUrl)}
+                      href={liveUrl || undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       disabled={!liveUrl}
                       className="text-[var(--primary)] hover:text-[var(--primary)]/80 hover:bg-[var(--primary)]/10"
                       icon={
