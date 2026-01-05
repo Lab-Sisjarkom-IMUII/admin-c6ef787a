@@ -13,11 +13,12 @@ export function useMonitoring(autoRefresh = true, interval = 5000) {
       setError(null);
       // Fetch all monitoring data sesuai INTEGRASI.md
       // apiRequest() sudah normalize response via extractApiResponse()
-      const [resources, network, services, system] = await Promise.all([
+      const [resources, network, services, system, pm2] = await Promise.all([
         apiRequest('/admin/monitoring/resources'),
         apiRequest('/admin/monitoring/network'),
         apiRequest('/admin/monitoring/services'),
-        apiRequest('/admin/monitoring/system')
+        apiRequest('/admin/monitoring/system'),
+        apiRequest('/admin/monitoring/pm2')
       ]);
       
       // Monitoring endpoints biasanya return data langsung tanpa nested structure
@@ -29,6 +30,7 @@ export function useMonitoring(autoRefresh = true, interval = 5000) {
         network: network,
         services: services,
         system: system,
+        pm2: pm2,
         
         // Legacy format untuk backward compatibility dengan komponen yang ada
         cpu: {

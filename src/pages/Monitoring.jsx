@@ -6,6 +6,7 @@ import ResourceCard from '@/components/monitoring/ResourceCard';
 import NetworkCard from '@/components/monitoring/NetworkCard';
 import ServiceHealthCard from '@/components/monitoring/ServiceHealthCard';
 import SystemHealthCard from '@/components/monitoring/SystemHealthCard';
+import Pm2ProcessesCard from '@/components/monitoring/Pm2ProcessesCard';
 import { useMonitoring } from '@/hooks/useMonitoring';
 import Button from '@/components/ui/Button';
 
@@ -116,6 +117,8 @@ export default function Monitoring() {
           <ServiceHealthCard data={data?.service} loading={loading} />
           <SystemHealthCard data={data?.system} loading={loading} />
         </div>
+
+        <Pm2ProcessesCard processes={data?.pm2?.processes || []} loading={loading} />
       </div>
     </DashboardLayout>
   );

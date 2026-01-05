@@ -92,6 +92,12 @@ const menuSections = [
         shortName: 'Monitoring'
       },
       { 
+        name: 'PM2 Logs', 
+        path: '/dashboard/pm2-logs', 
+        icon: TerminalIcon,
+        shortName: 'PM2 Logs'
+      },
+      { 
         name: 'Logs Terminal Server', 
         path: '/dashboard/server-logs', 
         icon: TerminalIcon,

@@ -108,6 +108,47 @@ const mockApiHandlers = {
       timeSync: mockMonitoringData.system.time_sync
     };
   },
+
+  '/admin/monitoring/pm2': async () => {
+    await simulateDelay();
+    return {
+      processes: [
+        {
+          id: 0,
+          name: 'imuii-server',
+          namespace: 'default',
+          status: 'online',
+          pid: 1234,
+          uptimeSec: 7200,
+          restarts: 1,
+          memoryBytes: 180 * 1024 * 1024,
+          cpuPercent: 2.4
+        },
+        {
+          id: 1,
+          name: 'imuii-worker',
+          namespace: 'default',
+          status: 'online',
+          pid: 1256,
+          uptimeSec: 3600,
+          restarts: 0,
+          memoryBytes: 120 * 1024 * 1024,
+          cpuPercent: 1.1
+        }
+      ]
+    };
+  },
+
+  '/admin/monitoring/pm2/logs': async () => {
+    await simulateDelay();
+    return {
+      logs: [
+        '[2026-01-05 09:00:12] cleanup: removed 3 old builds',
+        '[2026-01-05 09:05:12] cleanup: removed 1 old builds',
+        '[2026-01-05 09:10:12] cleanup: no old builds found'
+      ]
+    };
+  },
   
   // Legacy endpoint untuk backward compatibility
   '/admin/monitoring': async () => {
